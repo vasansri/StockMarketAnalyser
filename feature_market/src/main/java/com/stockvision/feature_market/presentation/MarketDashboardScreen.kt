@@ -131,40 +131,47 @@ fun MarketIndices(state: MarketDashboardState) {
             name = "NIFTY 50",
             value = state.niftyValue,
             change = state.niftyChange,
+            history = state.niftyHistory,
             modifier = Modifier.weight(1f)
         )
         IndexCard(
             name = "SENSEX",
             value = state.sensexValue,
             change = state.sensexChange,
+            history = state.sensexHistory,
             modifier = Modifier.weight(1f)
         )
     }
 }
 
 @Composable
-fun IndexCard(name: String, value: String, change: String, modifier: Modifier = Modifier) {
+fun IndexCard(name: String, value: String, change: String, history: List<Double>, modifier: Modifier = Modifier) {
     GlassCard(modifier = modifier) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(name, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(change, style = MaterialTheme.typography.labelSmall, color = GreenPositive)
             Spacer(modifier = Modifier.height(8.dp))
-            MiniChart(color = GreenPositive)
+            MiniChart(data = history, color = GreenPositive)
         }
     }
 }
 
 @Composable
-fun MiniChart(color: Color) {
+fun MiniChart(data: List<Double>, color: Color) {
     Canvas(modifier = Modifier.fillMaxWidth().height(30.dp)) {
+        if (data.size < 2) return@Canvas
+        
+        val max = data.maxOrNull()?.toFloat() ?: 0f
+        val min = data.minOrNull()?.toFloat() ?: 0f
+        val range = (max - min).coerceAtLeast(1f)
+        
         val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(0f, size.height)
-            lineTo(size.width * 0.2f, size.height * 0.8f)
-            lineTo(size.width * 0.4f, size.height * 0.9f)
-            lineTo(size.width * 0.6f, size.height * 0.4f)
-            lineTo(size.width * 0.8f, size.height * 0.5f)
-            lineTo(size.width, size.height * 0.1f)
+            data.forEachIndexed { index, value ->
+                val x = (index.toFloat() / (data.size - 1)) * size.width
+                val y = size.height - ((value.toFloat() - min) / range * size.height)
+                if (index == 0) moveTo(x, y) else lineTo(x, y)
+            }
         }
         drawPath(
             path = path,
@@ -359,6 +366,8 @@ fun DashboardPreview() {
         MarketDashboardContent(
             state = MarketDashboardState(
                 userName = "Alex Trader",
+                niftyHistory = listOf(22000.0, 22010.0, 22005.0, 22030.0, 22040.0),
+                sensexHistory = listOf(72600.0, 72620.0, 72610.0, 72640.0, 72643.0),
                 trendingStocks = listOf(
                     StockUiModel("AAPL", "Apple Inc.", "$175.00", "+1.5%", true),
                     StockUiModel("TSLA", "Tesla, Inc.", "$210.00", "-2.3%", false)

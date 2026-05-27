@@ -47,17 +47,23 @@ class StockRepositoryImpl @Inject constructor(
     }
 
     override fun getLiveStockPrice(symbols: List<String>): Flow<StockTicker> {
-        // Connect to WebSocket (e.g., Finnhub or generic)
-        webSocketManager.connect("wss://ws.finnhub.io?token=YOUR_API_KEY")
+        // Connect to a public WebSocket domain and port (Example: Finnhub or a custom socket server)
+        // You can use the URL version:
+         webSocketManager.connect("wss://ws.finnhub.io?token=d8bg1apr01qu2eqh5hlgd8bg1apr01qu2eqh5hm0")
+        
+        // Or use the domain and port version for custom servers:
+//        webSocketManager.connect(host = "ws.stockvision.com", port = 8080, useSsl = true)
         
         // Subscribe to symbols
         symbols.forEach { symbol ->
+//            println("webSocketManager 1 "+symbol)
             webSocketManager.sendMessage("{\"type\":\"subscribe\",\"symbol\":\"$symbol\"}")
         }
 
         return webSocketManager.messages
             .mapNotNull { message ->
                 try {
+//                    println("webSocketManager 2 "+message)
                     // Simple parsing for demo
                     // Expecting something like: {"data":[{"p":123,"s":"AAPL","t":12345}],"type":"trade"}
                     val data = gson.fromJson(message, WebSocketData::class.java)

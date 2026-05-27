@@ -18,8 +18,10 @@ data class MarketDashboardState(
     val userName: String = "John Doe",
     val niftyValue: String = "22,040.70",
     val niftyChange: String = "+120.50 (0.55%)",
+    val niftyHistory: List<Double> = emptyList(),
     val sensexValue: String = "72,643.43",
     val sensexChange: String = "+450.20 (0.62%)",
+    val sensexHistory: List<Double> = emptyList(),
     val trendingStocks: List<StockUiModel> = emptyList(),
     val topGainers: List<StockUiModel> = emptyList(),
     val topLosers: List<StockUiModel> = emptyList(),
@@ -35,7 +37,8 @@ data class StockUiModel(
     val price: String,
     val change: String,
     val isPositive: Boolean,
-    val lastUpdated: Long = 0
+    val lastUpdated: Long = 0,
+    val priceHistory: List<Double> = emptyList()
 )
 
 @HiltViewModel
@@ -46,24 +49,44 @@ class MarketDashboardViewModel @Inject constructor(
 
     init {
         loadMarketQuote("AAPL")
-        startLivePriceUpdates(listOf("AAPL", "TSLA", "GOOGL"))
+        startLivePriceUpdates(listOf("AAPL", "TSLA", "GOOGL", "NIFTY", "SENSEX"))
     }
 
     private fun startLivePriceUpdates(symbols: List<String>) {
         getLivePriceUseCase(symbols).onEach { ticker ->
             updateState { state ->
-                val updatedTrending = state.trendingStocks.map { stock ->
-                    if (stock.symbol == ticker.symbol) {
-                        stock.copy(
-                            price = "₹${ticker.price}",
-                            lastUpdated = System.currentTimeMillis()
+                when (ticker.symbol) {
+                    "NIFTY" -> {
+                        val newHistory = (state.niftyHistory + ticker.price).takeLast(20)
+                        state.copy(
+                            niftyValue = "₹${ticker.price}",
+                            niftyHistory = newHistory
                         )
-                    } else stock
+                    }
+                    "SENSEX" -> {
+                        val newHistory = (state.sensexHistory + ticker.price).takeLast(20)
+                        state.copy(
+                            sensexValue = "₹${ticker.price}",
+                            sensexHistory = newHistory
+                        )
+                    }
+                    else -> {
+                        val updatedTrending = state.trendingStocks.map { stock ->
+                            if (stock.symbol == ticker.symbol) {
+                                val newHistory = (stock.priceHistory + ticker.price).takeLast(20)
+                                stock.copy(
+                                    price = "₹${ticker.price}",
+                                    lastUpdated = System.currentTimeMillis(),
+                                    priceHistory = newHistory
+                                )
+                            } else stock
+                        }
+                        state.copy(
+                            livePrices = state.livePrices + (ticker.symbol to ticker.price),
+                            trendingStocks = updatedTrending
+                        )
+                    }
                 }
-                state.copy(
-                    livePrices = state.livePrices + (ticker.symbol to ticker.price),
-                    trendingStocks = updatedTrending
-                )
             }
         }.launchIn(viewModelScope)
     }

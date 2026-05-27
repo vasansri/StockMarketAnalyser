@@ -60,6 +60,12 @@ class WebSocketManager @Inject constructor(
         })
     }
 
+    fun connect(host: String, port: Int, useSsl: Boolean = true) {
+        val schema = if (useSsl) "wss" else "ws"
+        val url = "$schema://$host:$port"
+        connect(url)
+    }
+
     private fun attemptReconnect(url: String) {
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
@@ -85,5 +91,9 @@ class WebSocketManager @Inject constructor(
         webSocket?.close(1000, "User initiated disconnect")
         _connectionState.value = ConnectionState.Disconnected
         reconnectJob?.cancel()
+    }
+
+    companion object {
+        const val PUBLIC_TEST_URL = "wss://ws.postman-echo.com/raw"
     }
 }

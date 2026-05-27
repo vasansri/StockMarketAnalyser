@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "716545327297",
+    "project_id": "stockmarketanalyzer-3a3af",
+    "storage_bucket": "stockmarketanalyzer-3a3af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:716545327297:android:0d3006c4e8f81689175440",
+        "android_client_info": {
+          "package_name": "com.stockvision"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoBfyFhqOs212Q9qz1NH_tZmLaQCAvCl4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
